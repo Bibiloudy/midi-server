@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SENSITIVE</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+```
+    body {
+        font-family: Arial, sans-serif;
+        background: linear-gradient(135deg, #0d4f3c 0%, #1a5f47 50%, #0e3f32 100%);
+        color: white;
+        min-height: 100vh;
+    }
+
+    .screen { display: none; min-height: 100vh; }
+    .screen.active { display: flex; align-items: center; justify-content: center; }
+
+    .container {
+        max-width: 500px;
+        background: rgba(255,255,255,0.1);
+        padding: 40px;
+        border-radius: 20px;
+        backdrop-filter: blur(10px);
+        text-align: center;
+    }
+
+    h1 { font-size: 3rem; margin-bottom: 30px; }
+    h2 { font-size: 1.5rem; margin-bottom: 20px; }
+
+    .role-btn {
+        width: 100%;
+        padding: 20px;
+        margin: 10px 0;
+        background: rgba(255,255,255,0.1);
+        border: 1px solid rgba(255,255,255,0.3);
+        border-radius: 15px;
+        color: white;
+        cursor: pointer;
+        text-align: left;
+    }
+
+    .role-btn:hover { background: rgba(255,255,255,0.2); }
+
+    .input {
+        width: 100%;
+        padding: 15px;
+        margin: 10px 0;
+        background: rgba(255,255,255,0.1);
+        border: 1px solid rgba(255,255,255,0.3);
+        border-radius: 10px;
+        color: white;
+        font-size: 1rem;
+    }
+
+    .input::placeholder { color: rgba(255,255,255,0.6); }
+
+    .btn {
+        width: 100%;
+        padding: 15px;
+        margin: 10px 0;
+        background: rgba(229, 57, 53, 0.7);
+        border: none;
+        border-radius: 10px;
+        color: white;
+        font-size: 1.1rem;
+        cursor: pointer;
+    }
+
+    .btn:hover { background: rgba(229, 57, 53, 0.9); }
+    .btn:disabled { background: rgba(100, 100, 100, 0.3); cursor: not-allowed; }
+
+    .btn.ready { background: rgba(229, 57, 53, 0.9); }
+
+    .back-btn {
+        background: none;
+        border: none;
+        color: rgba(255,255,255,0.7);
+        cursor: pointer;
+        margin-bottom: 20px;
+    }
+
+    .back-btn:hover { color: white; }
+
+    /* Interface de jeu */
+    .game-screen {
+        height: 100vh;
+        background: #000;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .game-header {
+        background: rgba(255,255,255,0.1);
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .game-area {
+        position: absolute;
+        top: 60px;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+    }
+
+    .lane {
+        flex: 1;
+        position: relative;
+        border-right: 1px solid rgba(255,255,255,0.2);
+        cursor: pointer;
+    }
+
+    .lane:last-child { border-right: none; }
+
+    .hit-line {
+        position: absolute;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: white;
+        top: 66%;
+        box-shadow: 0 0 20px #ffffff;
+    }
+
+    .lane-label {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        font-size: 0.8rem;
+        opacity: 0.7;
+    }
+
+    .note {
+        position: absolute;
+        left: 5%;
+        width: 90%;
+        height: 40px;
+        border-radius: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        color: #000;
+    }
+
+    .overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 20;
+    }
+
+    .overlay-content {
+        background: rgba(255,255,255,0.1);
+        padding: 40px;
+        border-radius: 20px;
+        text-align: center;
+        max-width: 500px;
+    }
+
+    .part-btn {
+        width: 100%;
+        padding: 15px;
+        margin: 8px 0;
+        background: rgba(59, 130, 246, 0.7);
+        border: none;
+        border-radius: 10px;
+        color: white;
+        cursor: pointer;
+        text-align: left;
+    }
+
+    .countdown {
+        font-size: 6rem;
+        font-weight: bold;
+        margin: 20px 0;
+        text-shadow: 0 0 30px currentColor;
+    }
+
+    /* Couleurs des pistes */
+    .lane-0 { background: rgba(255, 107, 107, 0.1); }
+    .lane-1 { background: rgba(78, 205, 196, 0.1); }
+    .lane-2 { background: rgba(69, 183, 209, 0.1); }
+    .lane-3 { background: rgba(150, 206, 180, 0.1); }
+
+    .note-0 { background: #ff6b6b; }
+    .note-1 { background: #4ecdc4; }
+    .note-2 { background: #45b7d1; }
+    .note-3 { background: #96ceb4; }
+</style>
+```
+
+</head>
+<body>
+    <!-- SÉLECTION DE RÔLE -->
+    <div id="role-screen" class="screen active">
+        <div class="container">
+            <h1>SENSITIVE</h1>
+            <h2>Choisissez votre rôle</h2>
+
+```
+        <button class="role-btn" onclick="selectRole('composer')">
+            <div style="font-size: 1.2rem; font-weight: bold;">🎼 Compositeur</div>
+            <div style="font-size: 0.9rem; opacity: 0.8;">Créer une session, gérer les parties</div>
+        </button>
+
+        <button class="role-btn" onclick="selectRole('musician')">
+            <div style="font-size: 1.2rem; font-weight: bold;">🎵 Musicien</div>
+            <div style="font-size: 0.9rem; opacity: 0.8;">Rejoindre une session, jouer une partie</div>
+        </button>
+    </div>
+</div>
+
+<!-- CONNEXION -->
+<div id="connection-screen" class="screen">
+    <div class="container">
+        <button class="back-btn" onclick="backToRole()">← Retour</button>
+        <h2 id="connection-title"></h2>
+
+        <input type="text" id="player-name" class="input" placeholder="Votre nom" />
+
+        <div id="composer-connection">
+            <button id="create-btn" class="btn" onclick="createSession()" disabled></button>
+        </div>
+
+        <div id="musician-connection" style="display: none;">
+            <button id="join-btn" class="btn" onclick="joinSession()" disabled></button>
+        </div>
+    </div>
+</div>
+
+<!-- INTERFACE COMPOSITEUR -->
+<div id="composer-screen" class="screen">
+    <div style="padding: 20px; min-height: 100vh;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+            <h2>🎼 Session SENSITIVE</h2>
+            <button class="btn" style="width: auto; padding: 10px 20px;" onclick="backToRole()">🏠 Menu</button>
+        </div>
+
+        <div style="background: rgba(255,255,255,0.1); padding: 25px; border-radius: 15px; margin-bottom: 25px;">
+            <h3 style="margin-bottom: 20px;">👥 Participants</h3>
+            <div id="musicians-list">
+                <p style="color: rgba(255,255,255,0.6);">Aucun musicien connecté</p>
+            </div>
+            <button class="btn" style="margin-top: 15px;" onclick="addTestMusicians()">+ Ajouter musiciens test</button>
+        </div>
+
+        <div style="background: rgba(255,255,255,0.1); padding: 25px; border-radius: 15px; margin-bottom: 25px;">
+            <h3 style="margin-bottom: 20px;">📁 Parties MIDI</h3>
+            <div id="parts-list">
+                <p style="color: rgba(255,255,255,0.6);">Aucune partie chargée</p>
+            </div>
+            <button class="btn" style="margin-top: 15px;" onclick="createTestParts()">🧪 Créer parties de test</button>
+        </div>
+
+        <div style="background: rgba(255,255,255,0.1); padding: 25px; border-radius: 15px;">
+            <h3 style="margin-bottom: 20px;">🚀 Contrôle</h3>
+            <button class="btn" style="background: rgba(34, 197, 94, 0.7); font-size: 1.3rem;" onclick="startSession()">
+                ▶ DÉMARRER LA SESSION
+            </button>
+            <p style="text-align: center; margin-top: 10px; font-size: 0.9rem; opacity: 0.7;">
+                Parties: <span id="parts-count">0</span> | Musiciens: <span id="musicians-count">0</span>
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- INTERFACE MUSICIEN -->
+<div id="musician-screen" class="screen game-screen">
+    <div class="game-header">
+        <span>🎵 Session SENSITIVE</span>
+        <button style="background: rgba(100,100,100,0.6); border: none; padding: 8px 15px; border-radius: 5px; color: white; cursor: pointer;" onclick="backToRole()">🏠</button>
+    </div>
+
+    <div class="game-area" id="game-area">
+        <!-- Pistes générées en JavaScript -->
+    </div>
+
+    <!-- Sélection de partie -->
+    <div id="part-selection" class="overlay">
+        <div class="overlay-content">
+            <h2>Choisir votre partie</h2>
+            <div id="available-parts">
+                <p style="color: rgba(255,255,255,0.6);">En attente des parties...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attente -->
+    <div id="waiting" class="overlay" style="display: none;">
+        <div class="overlay-content">
+            <h2>🎵 Partie sélectionnée</h2>
+            <div style="font-size: 1.2rem; color: #4caf50; margin: 15px 0;">
+                Partie <span id="selected-part-num"></span>
+            </div>
+            <p style="color: #45b7d1;">En attente du démarrage...</p>
+        </div>
+    </div>
+
+    <!-- Décompte -->
+    <div id="countdown" class="overlay" style="display: none;">
+        <div class="overlay-content">
+            <h2>Décompte</h2>
+            <div id="countdown-num" class="countdown" style="color: #ff6b6b;">1</div>
+            <div id="countdown-text">Un</div>
+            <p style="margin-top: 20px; font-size: 0.9rem; color: rgba(255,255,255,0.8);">
+                Préparez-vous à cliquer sur les pistes quand les notes traversent la ligne blanche
+            </p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Variables
+    let currentRole = '';
+    let playerName = '';
+    let roomCode = '';
+    let availableParts = [];
+    let connectedMusicians = [];
+    let selectedPart = null;
+    let gamePhase = 'lobby';
+    let isPlaying = false;
+    let midiNotes = [];
+    let startTime = 0;
+    let activeNotes = new Set();
+
+    const laneColors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4'];
+
+    // Configuration du serveur MIDI
+    const MIDI_SERVER = 'https://midi-sync-server.onrender.com';
+
+    // Fonctions serveur MIDI
+    async function loadPartsFromServer() {
+        try {
+            const response = await fetch(`${MIDI_SERVER}/partitions`);
+            const data = await response.json();
+
+            if (data.partitions) {
+                availableParts = data.partitions.map((partition, index) => ({
+                    id: index,
+                    name: partition.titre,
+                    fileName: `${partition.titre}.mid`,
+                    notes: createNotesFromPartition(partition, index)
+                }));
+
+                console.log('Parties chargées depuis le serveur:', availableParts);
+                updatePartsList();
+                updateAvailableParts();
+                updateStats();
+                return true;
+            }
+        } catch (error) {
+            console.error('Erreur lors du chargement des parties:', error);
+            return false;
+        }
+    }
+
+    function createNotesFromPartition(partition, partIndex) {
+        const notes = [];
+        partition.notes.forEach((noteName, index) => {
+            const midiNote = getNoteNumber(noteName);
+            notes.push({
+                note: midiNote,
+                time: index * 1500 + 6000, // Espacement de 1.5 secondes
+                lane: index % 4,
+                id: `${partIndex}-${index}`,
+                noteName: noteName
+            });
+        });
+        return notes;
+    }
+
+    function getNoteNumber(noteName) {
+        const noteMap = {
+            'Do': 60, 'Ré': 62, 'Mi': 64, 'Fa': 65,
+            'Sol': 67, 'La': 69, 'Si': 71
+        };
+        return noteMap[noteName] || 60;
+    }
+
+    async function sendPerformanceToServer(noteName, partitionName) {
+        try {
+            const performance = {
+                musicien: playerName,
+                notes: `Note ${noteName} sur ${partitionName}`,
+                timestamp: new Date().toISOString()
+            };
+
+            const response = await fetch(`${MIDI_SERVER}/performances`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(performance)
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                console.log('Performance envoyée:', result);
+            } else {
+                console.error('Erreur envoi performance:', response.status);
+            }
+        } catch (error) {
+            console.error('Erreur lors de l\'envoi:', error);
+        }
+    }
+
+    async function getSyncInfo() {
+        try {
+            const response = await fetch(`${MIDI_SERVER}/sync`);
+            const data = await response.json();
+
+            if (data) {
+                console.log('Info sync:', data);
+                // Mettre à jour le nombre de musiciens connectés
+                const syncMusicians = data.musiciens_connectes || 0;
+                document.getElementById('musicians-count').textContent = syncMusicians;
+            }
+        } catch (error) {
+            console.error('Erreur sync:', error);
+        }
+    }
+
+    // Navigation
+    function showScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+    }
+
+    function selectRole(role) {
+        currentRole = role;
+        showScreen('connection-screen');
+
+        document.getElementById('connection-title').textContent =
+            role === 'composer' ? '🎼 Compositeur' : '🎵 Musicien';
+
+        document.getElementById('composer-connection').style.display =
+            role === 'composer' ? 'block' : 'none';
+        document.getElementById('musician-connection').style.display =
+            role === 'composer' ? 'none' : 'block';
+
+        // Reset du champ nom et des boutons
+        document.getElementById('player-name').value = '';
+        document.getElementById('create-btn').disabled = true;
+        document.getElementById('join-btn').disabled = true;
+        document.getElementById('create-btn').classList.remove('ready');
+        document.getElementById('join-btn').classList.remove('ready');
+
+        // Écouter les changements dans le champ nom
+        setupNameListener();
+    }
+
+    function setupNameListener() {
+        const nameInput = document.getElementById('player-name');
+        const createBtn = document.getElementById('create-btn');
+        const joinBtn = document.getElementById('join-btn');
+
+        // Supprimer l'ancien listener s'il existe
+        nameInput.removeEventListener('input', nameInputHandler);
+
+        // Ajouter le nouveau listener
+        nameInput.addEventListener('input', nameInputHandler);
+
+        function nameInputHandler() {
+            const name = nameInput.value.trim();
+            const hasText = name.length >= 1;
+
+            // Activer/désactiver les boutons selon le rôle
+            if (currentRole === 'composer') {
+                createBtn.disabled = !hasText;
+                if (hasText) {
+                    createBtn.classList.add('ready');
+                    createBtn.textContent = 'Créer la session';
+                } else {
+                    createBtn.classList.remove('ready');
+                    createBtn.textContent = '';
+                }
+            } else {
+                joinBtn.disabled = !hasText;
+                if (hasText) {
+                    joinBtn.classList.add('ready');
+                    joinBtn.textContent = 'Rejoindre';
+                } else {
+                    joinBtn.classList.remove('ready');
+                    joinBtn.textContent = '';
+                }
+            }
+        }
+
+        // Permettre la validation avec Entrée
+        nameInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                if (currentRole === 'composer' && !createBtn.disabled) {
+                    createSession();
+                } else if (currentRole === 'musician' && !joinBtn.disabled) {
+                    joinSession();
+                }
+            }
+        });
+    }
+
+    function backToRole() {
+        currentRole = '';
+        playerName = '';
+        roomCode = '';
+        availableParts = [];
+        connectedMusicians = [];
+        selectedPart = null;
+        gamePhase = 'lobby';
+        isPlaying = false;
+
+        // Reset des overlays
+        document.getElementById('part-selection').style.display = 'flex';
+        document.getElementById('waiting').style.display = 'none';
+        document.getElementById('countdown').style.display = 'none';
+
+        showScreen('role-screen');
+    }
+
+    function createSession() {
+        const name = document.getElementById('player-name').value.trim();
+        if (name.length < 1) {
+            alert('Entrez votre nom');
+            return;
+        }
+
+        playerName = name;
+
+        showScreen('composer-screen');
+
+        // Charger les parties depuis le serveur
+        loadPartsFromServer().then(success => {
+            if (!success) {
+                console.log('Pas de parties sur le serveur, création de parties de test');
+                createTestParts();
+            }
+        });
+
+        // Démarrer la synchronisation
+        setInterval(getSyncInfo, 5000); // Toutes les 5 secondes
+
+        updateStats();
+    }
+
+    function joinSession() {
+        const name = document.getElementById('player-name').value.trim();
+
+        if (name.length < 1) {
+            alert('Entrez votre nom');
+            return;
+        }
+
+        playerName = name;
+        console.log('Musicien connecté:', playerName);
+
+        showScreen('musician-screen');
+        setupGameArea();
+
+        // Charger les parties depuis le serveur
+        loadPartsFromServer().then(success => {
+            if (success) {
+                updateAvailableParts();
+            } else {
+                // Si pas de parties sur le serveur, créer des parties de test
+                createTestParts();
+                updateAvailableParts();
+            }
+        });
+
+        // S'assurer que l'overlay de sélection est visible
+        document.getElementById('part-selection').style.display = 'flex';
+        document.getElementById('waiting').style.display = 'none';
+        document.getElementById('countdown').style.display = 'none';
+    }
+
+    function setupGameArea() {
+        console.log('Configuration de l\'aire de jeu...');
+        const gameArea = document.getElementById('game-area');
+        gameArea.innerHTML = '';
+
+        for (let i = 0; i < 4; i++) {
+            const lane = document.createElement('div');
+            lane.className = `lane lane-${i}`;
+            lane.onclick = () => clickLane(i);
+
+            lane.innerHTML = `
+                <div class="hit-line"></div>
+                <div class="lane-label">Piste ${i + 1}</div>
+            `;
+
+            gameArea.appendChild(lane);
+        }
+
+        console.log('Aires de jeu créées');
+    }
+
+    function addTestMusicians() {
+        connectedMusicians = [
+            { name: 'Alice', ready: true, part: 0 },
+            { name: 'Bob', ready: false, part: null },
+            { name: 'Charlie', ready: true, part: 1 }
+        ];
+        updateMusiciansList();
+        updateStats();
+    }
+
+    function createTestParts() {
+        // Si pas de parties du serveur, créer des parties de test
+        if (availableParts.length === 0) {
+            availableParts = [
+                { id: 0, name: 'Mélodie Collective', fileName: 'melodie.mid', notes: createTestNotes(0) },
+                { id: 1, name: 'Rythme Partagé', fileName: 'rythme.mid', notes: createTestNotes(1) }
+            ];
+        }
+        updatePartsList();
+        updateAvailableParts();
+        updateStats();
+    }
+
+    function createTestNotes(partIndex) {
+        const notes = [];
+        for (let i = 0; i < 8; i++) {
+            notes.push({
+                note: 60 + partIndex * 3 + i,
+                time: i * 1000 + 6000,
+                lane: i % 4,
+                id: `${partIndex}-${i}`
+            });
+        }
+        return notes;
+    }
+
+    function updateMusiciansList() {
+        const list = document.getElementById('musicians-list');
+        if (connectedMusicians.length === 0) {
+            list.innerHTML = '<p style="color: rgba(255,255,255,0.6);">Aucun musicien connecté</p>';
+            return;
+        }
+
+        list.innerHTML = '';
+        connectedMusicians.forEach(m => {
+            const div = document.createElement('div');
+            div.style.cssText = 'display: flex; justify-content: space-between; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 8px; margin: 5px 0;';
+            div.innerHTML = `
+                <span>${m.name}</span>
+                <span style="color: ${m.ready ? '#4caf50' : '#ffeb3b'};">
+                    ${m.part !== null ? `Partie ${m.part + 1}` : 'En attente'}
+                </span>
+            `;
+            list.appendChild(div);
+        });
+    }
+
+    function updatePartsList() {
+        const list = document.getElementById('parts-list');
+        if (availableParts.length === 0) {
+            list.innerHTML = '<p style="color: rgba(255,255,255,0.6);">Aucune partie chargée</p>';
+            return;
+        }
+
+        list.innerHTML = '';
+        availableParts.forEach(p => {
+            const div = document.createElement('div');
+            div.style.cssText = 'padding: 10px; background: rgba(255,255,255,0.1); border-radius: 8px; margin: 5px 0;';
+            div.innerHTML = `
+                <div style="font-weight: bold;">${p.name}</div>
+                <div style="font-size: 0.9rem; color: #4caf50;">✅ ${p.fileName}</div>
+                <div style="font-size: 0.8rem; opacity: 0.7;">${p.notes.length} notes</div>
+            `;
+            list.appendChild(div);
+        });
+    }
+
+    function updateAvailableParts() {
+        const container = document.getElementById('available-parts');
+        if (availableParts.length === 0) {
+            container.innerHTML = '<p style="color: rgba(255,255,255,0.6);">En attente des parties...</p>';
+            return;
+        }
+
+        container.innerHTML = '';
+        availableParts.forEach((part, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'part-btn';
+            btn.onclick = () => selectPart(index);
+            btn.innerHTML = `
+                <div style="font-weight: bold;">${part.name}</div>
+                <div style="font-size: 0.9rem; opacity: 0.8;">${part.fileName}</div>
+                <div style="font-size: 0.8rem;">${part.notes.length} notes</div>
+            `;
+            container.appendChild(btn);
+        });
+    }
+
+    function selectPart(partIndex) {
+        selectedPart = partIndex;
+        midiNotes = availableParts[partIndex].notes;
+
+        document.getElementById('part-selection').style.display = 'none';
+        document.getElementById('waiting').style.display = 'flex';
+        document.getElementById('selected-part-num').textContent = partIndex + 1;
+    }
+
+    function updateStats() {
+        document.getElementById('parts-count').textContent = availableParts.length;
+        document.getElementById('musicians-count').textContent = connectedMusicians.length;
+    }
+
+    function startSession() {
+        if (availableParts.length === 0) {
+            alert('Créez d\'abord des parties de test !');
+            return;
+        }
+
+        gamePhase = 'countdown';
+
+        // Pour le musicien, cacher l'attente et montrer le décompte
+        if (currentRole === 'musician') {
+            document.getElementById('waiting').style.display = 'none';
+            document.getElementById('countdown').style.display = 'flex';
+            startCountdown();
+        } else {
+            // Pour le compositeur, juste un message
+            alert('Session démarrée ! Les musiciens voient le décompte.');
+        }
+    }
+
+    function startCountdown() {
+        let count = 1;
+        const countdownNum = document.getElementById('countdown-num');
+        const countdownText = document.getElementById('countdown-text');
+        const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4'];
+        const texts = ['Un', 'Deux', 'Trois', 'Quatre'];
+
+        const interval = setInterval(() => {
+            countdownNum.textContent = count;
+            countdownNum.style.color = colors[count - 1];
+            countdownText.textContent = texts[count - 1];
+
+            count++;
+            if (count > 4) {
+                clearInterval(interval);
+                setTimeout(() => {
+                    document.getElementById('countdown').style.display = 'none';
+                    startGame();
+                }, 1000);
+            }
+        }, 1000);
+    }
+
+    function startGame() {
+        isPlaying = true;
+        gamePhase = 'playing';
+        startTime = Date.now();
+        animate();
+    }
+
+    function animate() {
+        if (!isPlaying) return;
+
+        const currentTime = Date.now() - startTime;
+
+        // Nettoyer les anciennes notes
+        document.querySelectorAll('.note').forEach(n => n.remove());
+
+        // Afficher les notes actuelles
+        midiNotes.forEach(note => {
+            const position = ((6000 - (note.time - currentTime)) / 6000) * 100;
+
+            if (position > -10 && position < 110) {
+                const noteEl = document.createElement('div');
+                noteEl.className = `note note-${note.lane}`;
+                noteEl.style.top = position + '%';
+                noteEl.textContent = note.note;
+
+                const lane = document.querySelector(`.lane-${note.lane}`);
+                if (lane) lane.appendChild(noteEl);
+            }
+        });
+
+        requestAnimationFrame(animate);
+    }
+
+    function clickLane(laneIndex) {
+        if (!isPlaying) return;
+
+        const currentTime = Date.now() - startTime;
+        const hittableNotes = midiNotes.filter(note => {
+            if (note.lane !== laneIndex || activeNotes.has(note.id)) return false;
+            const position = ((6000 - (note.time - currentTime)) / 6000) * 100;
+            return position >= 64 && position <= 68;
+        });
+
+        if (hittableNotes.length > 0) {
+            const note = hittableNotes[0];
+            activeNotes.add(note.id);
+
+            console.log(`Note ${note.noteName || note.note} touchée !`);
+
+            // Envoyer la performance au serveur
+            const partitionName = availableParts[selectedPart]?.name || 'Partition inconnue';
+            sendPerformanceToServer(note.noteName || note.note, partitionName);
+
+            // Effet visuel de réussite
+            const lanes = document.querySelectorAll('.lane');
+            if (lanes[laneIndex]) {
+                lanes[laneIndex].style.background = 'rgba(76, 175, 80, 0.3)';
+                setTimeout(() => {
+                    lanes[laneIndex].style.background = `rgba(${laneColors[laneIndex].replace('#', '').match(/.{2}/g).map(x => parseInt(x, 16)).join(', ')}, 0.1)`;
+                }, 200);
+            }
+        }
+    }
+
+    // Initialisation
+    showScreen('role-screen');
+</script>
+```
+
+</body>
+</html>
